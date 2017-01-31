@@ -1,0 +1,10 @@
+{
+    "name": "moodle-atto_helixatto-button",
+    "builds": {
+        "moodle-atto_helixatto-button": {
+            "jsfiles": [
+                "button.js"
+            ]
+        }
+    }
+}
