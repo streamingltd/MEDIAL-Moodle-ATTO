@@ -18,19 +18,19 @@
  * Atto helixatto  version file.
  *
  * @package    atto_helixatto
- * @copyright  COPYRIGHTINFO
+ * @copyright  Streaming LTD
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2017013101;        // The current plugin version (Date: YYYYMMDDXX).
-$plugin->requires  = 2014051200;        // Requires this Moodle version.
+$plugin->version   = 2018080802;        // The current plugin version (Date: YYYYMMDDXX).
+$plugin->requires  = 2016052300;        // Requires this Moodle version.
 $plugin->component = 'atto_helixatto';  // Full name of the plugin (used for diagnostics).
 $plugin->maturity  = MATURITY_STABLE;
 // Human readable version information
-$plugin->release   = '2015082402';
+$plugin->release   = 2018080802;
 
 $plugin->dependencies = array(
-    'mod_helixmedia' => 2016011501
+    'mod_helixmedia' => '2018080802'
 );

@@ -44,7 +44,7 @@ function atto_helixatto_strings_for_js() {
  * @return array of additional params to pass to javascript init function for this module.
  */
 function atto_helixatto_params_for_js($elementid, $options, $fpoptions) {
-    global $USER, $COURSE, $CFG;
+    global $USER, $COURSE, $CFG, $PAGE;
 
     /**Switch of button when using the activity module.
        Use PARAM_RAW type here in case "add" is used for something other than a plugin name in other parts of moodle**/
@@ -67,7 +67,8 @@ function atto_helixatto_params_for_js($elementid, $options, $fpoptions) {
         $disabled=true;
     }
 
-    if ($add == "helixmedia" || $action == "grader" || $action == "grade") {
+    if ($add == "helixmedia" || $action == "grader" || $action == "grade" ||
+        strpos($PAGE->url, '/forum/post.php')!==false) {
         $disabled = true;
     }
 

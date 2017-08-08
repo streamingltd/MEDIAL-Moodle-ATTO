@@ -32,6 +32,6 @@ $string['nothingtoinsert'] = 'Nothing to insert!';
 $string['dialogtitle'] = 'Media Library';
 $string['insert'] = 'Insert';
 $string['cancel'] = 'Cancel';
-$string['helixatto:visible'] = 'Visible';
+$string['helixatto:visible'] = 'User can add content videos using atto';
 $string['hideinsert'] = 'Hide the Insert button';
 $string['hideinsert_desc'] = 'Hides the insert button at the bottom of the insert video dialog. Note: The insert button will aways be shown regardless of the setting here if the "Video add dialog box close delay in seconds" property of the activity module (helixmedia | modal_delay) is set to a negative number.';
