@@ -36,19 +36,10 @@ var COMPONENTNAME = 'atto_helixatto';
 
 
 var TEMPLATE = '' +
-    '<form class="atto_form">' +
-        '<div id="{{elementid}}_{{innerform}}" class="mdl-align" style=\"margin-bottom:20px;\">'+
-            '<iframe id=\"medialiframe\" style=\"border:0px;background:#ffffff;width:{{width}}px;height:{{height}}px;\" src=\"{{iframesrc}}\"></iframe>' +
-            '<button id="medial_insert" class="{{CSS.INPUTSUBMIT}}">{{get_string "insert" component}}</button>' +
-        '</div>' +
-    '</form>';
-
-var SMALL_TEMPLATE = '' +
-    '<form class="atto_form">' +
-        '<div id="{{elementid}}_{{innerform}}" class="mdl-align" style=\"margin-bottom:20px;\">'+
-        '<div style="width:{{outwidth}}px;height:{{outheight}}px;overflow:scroll;-webkit-overflow-scrolling:touch;">' +
-            '<iframe id=\"medialiframe\" style=\"margin:0px;border:0px;background:#ffffff;width:{{width}}px;height:{{height}}px;\" src=\"{{iframesrc}}\"></iframe></div>' +
-            '<button id="medial_insert" class="{{CSS.INPUTSUBMIT}}">{{get_string "insert" component}}</button>' +
+    '<form class=\"atto_form\">' +
+        '<div id="{{elementid}}_{{innerform}}" class="mdl-align" style=\"height:{{height}}px;\">'+
+            '<iframe id=\"medialiframe\" style=\"border:0px;margin:0px;background:#ffffff;width:100%;height:100%\" src=\"{{iframesrc}}\" ></iframe>' +
+            '<button id=\"medial_insert\" class=\"{{CSS.INPUTSUBMIT}}\">{{get_string "insert" component}}</button>' +
         '</div>' +
     '</form>';
 
@@ -69,6 +60,8 @@ var dwidth = 935;
 var dheight = 435;
 
 var gotIn = false;
+
+var oauthConsumerKey = "";
 
 Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 
@@ -108,6 +101,7 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
 
     _receiveMessage: function(event) {
         var i=event.data.indexOf("preid_");
+console.log(event.data);
         if (i==0) {
             preid=event.data.substring(6);
             interval = setTimeout(buttonInstance._checkStatus, 5000);
@@ -129,7 +123,7 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
         else
             xmlDoc = new XMLHttpRequest();
 
-        var params="resource_link_id="+preid+"&user_id="+buttonInstance.get('userid');
+        var params="resource_link_id="+preid+"&user_id="+buttonInstance.get('userid')+"&oauth_consumer_key="+buttonInstance.get('oauthConsumerKey');
         xmlDoc.open("POST", buttonInstance.get('statusurl') , false);
         xmlDoc.setRequestHeader("Content-type","application/x-www-form-urlencoded");
         xmlDoc.send(params);
@@ -138,8 +132,7 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
             gotIn=false;
             return;
         }
-
-        //alert("resp: "+xmlDoc.responseText+" "+gotIn+"\n");
+        console.log(params+" "+xmlDoc.responseText+" "+gotIn);
 
         if (xmlDoc.responseText=="IN")
             gotIn=true;
@@ -167,23 +160,11 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
     _displayDialogue: function(e) {
         e.preventDefault();
         inserted = false;
-        var width=1000;
-        var height=550;
+        var width = document.documentElement.clientWidth-10;
+        var height = document.documentElement.clientHeight-55;
 
-        if( typeof( window.innerWidth ) == 'number' ) {
-            //Non-IE
-            width = window.innerWidth-20;
-            height = window.innerHeight-55;
-        }
-        else if( document.documentElement &&
-            ( document.documentElement.clientWidth || document.documentElement.clientHeight ) ) {
-            //IE 6+ in 'standards compliant mode'
-            width = document.documentElement.clientWidth-20;
-            height = document.documentElement.clientHeight-55;
-        }
-
-        if (width>1000) {
-            width=1000;
+        if (width>935) {
+            width=935;
         }
         if (height>1400) {
             height=1400;
@@ -191,7 +172,6 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
 
         dwidth = width;
         dheight = height;
-        
         dialogueInstance = this.getDialogue({
             headerContent: M.util.get_string('dialogtitle', COMPONENTNAME),
             width: width + 'px',
@@ -200,7 +180,7 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
             overflowX: 'auto',
             constraintoviewport: false
         });
-        
+
 		//dialog doesn't detect changes in width without this
 		//if you reuse the dialog, this seems necessary
         if(dialogueInstance.width !== width + 'px'){
@@ -217,10 +197,14 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
         dialogueInstance.set('bodyContent', bodycontent);
 
         dialogueInstance.show();
-        this.markUpdated();
 
-        if(buttonInstance.get('hideinsert')=="1")
+        if(buttonInstance.get('hideinsert')=="1") {
             document.getElementById("medial_insert").style.visibility="hidden";
+        } else {
+            document.getElementById("medialiframe").style.height=(height-115)+"px";
+        }
+
+        this.markUpdated();
     },
 
 
@@ -233,35 +217,17 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
      * @private
      */
     _getFormContent: function() {
-        if (dheight < 570 || dwidth < 760) {
-            var dheightfactor=0;
-            if (dheight > 350) { 
-                dheightfactor=90;
-            }
-            var template = Y.Handlebars.compile(SMALL_TEMPLATE),
-                content = Y.Node.create(template({
-                    elementid: this.get('host').get('elementid'),
-                    component: COMPONENTNAME,
-                    CSS: CSS,
-                    iframesrc: hmlLaunchURL+"?type=15",
-                    width:760,
-                    height:dheight-dheightfactor,
-                    outwidth:dwidth-15,
-                    outheight:dheight-dheightfactor,
-                    style:"border:10px solid black;"
-                }));
-        } else {
-            var template = Y.Handlebars.compile(TEMPLATE),
-                content = Y.Node.create(template({
-                    elementid: this.get('host').get('elementid'),
-                    component: COMPONENTNAME,
-                    CSS: CSS,
-                    iframesrc: hmlLaunchURL+"?type=15",
-                    width:dwidth-50,
-                    height:dheight-90,
-                    style:"border:10px solid black;"
-                }));
-        }
+        var template = Y.Handlebars.compile(TEMPLATE),
+            content = Y.Node.create(template({
+                elementid: this.get('host').get('elementid'),
+                component: COMPONENTNAME,
+                CSS: CSS,
+                iframesrc: hmlLaunchURL+"?type=15",
+                width:dwidth-30,
+                height:dheight-90,
+                style:"border:0px;"
+            }));
+
         this._form = content;
         this._form.one('.' + CSS.INPUTSUBMIT).on('click', this._doInsert, this);
 
@@ -291,7 +257,7 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
 
         var url=hmlLaunchURL+"?type=10&l="+preid;
         var html="<p><iframe style=\"overflow:hidden;border:0px none;background:#ffffff;width:680px;height:570px;\""+
-            " src=\""+url+"\" id=\"hmlvid-"+preid+"\"></iframe>\n"+
+            " src=\""+url+"\" id=\"hmlvid-"+preid+"\" allowfullscreen=\"true\" webkitallowfullscreen=\"true\" mozallowfullscreen=\"true\"></iframe>\n"+
             "</p>";
 
         this.get('host').insertContentAtFocusPoint(html);
@@ -325,6 +291,10 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
 
 		insertdelay: {
 			value: ''
-		}
+		},
+
+		oauthConsumerKey: {
+			value: ''
+		},
 	}
 });
