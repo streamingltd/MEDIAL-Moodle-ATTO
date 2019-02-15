@@ -78,6 +78,7 @@ function atto_helixatto_params_for_js($elementid, $options, $fpoptions) {
     //add our disabled param
     $params['disabled'] = $disabled;
     $params['baseurl'] = $CFG->wwwroot;
+    $params['ltiurl'] = get_config("helixmedia", "launchurl");
     $params['statusurl'] = helixmedia_get_status_url();
     $params['userid'] = $USER->id;
     $params['insertdelay'] = get_config('helixmedia', 'modal_delay');

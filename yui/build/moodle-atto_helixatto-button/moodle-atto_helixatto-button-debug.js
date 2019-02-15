@@ -40,7 +40,7 @@ var COMPONENTNAME = 'atto_helixatto';
 var TEMPLATE = '' +
     '<form class=\"atto_form\">' +
         '<div id="{{elementid}}_{{innerform}}" class="mdl-align" style=\"height:{{height}}px;\">'+
-            '<iframe id=\"medialiframe\" style=\"border:0px;margin:0px;background:#ffffff;width:100%;height:100%\" src=\"{{iframesrc}}\" ></iframe>' +
+            '<iframe id=\"medialiframe\" style=\"border:0px;margin:0px;background:#ffffff;width:100%;height:100%\" src=\"{{iframesrc}}\" allow=\"{{allow}}\"></iframe>' +
             '<button id=\"medial_insert\" class=\"{{CSS.INPUTSUBMIT}}\">{{get_string "insert" component}}</button>' +
         '</div>' +
     '</form>';
@@ -54,6 +54,7 @@ var CSS = {
 var preid = -1;
 var inserted = false;
 var hmlLaunchURL = '';
+var ltiurl = '';
 var interval = null;
 var buttonInstance = '';
 var dialogueInstance = null;
@@ -93,6 +94,7 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
         window.addEventListener("message", this._receiveMessage, false);
         //window.onunload=this._doInsert;
         hmlLaunchURL = this.get('baseurl')+"/mod/helixmedia/launch.php";
+        ltiurl = this.get('ltiurl');
         //The interval timer doesn't seem to get the right scope for "this" to work inside _checkStatus, so set a global var here.
         buttonInstance = this;
     },
@@ -103,7 +105,6 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
 
     _receiveMessage: function(event) {
         var i=event.data.indexOf("preid_");
-console.log(event.data);
         if (i==0) {
             preid=event.data.substring(6);
             interval = setTimeout(buttonInstance._checkStatus, 5000);
@@ -134,7 +135,6 @@ console.log(event.data);
             gotIn=false;
             return;
         }
-        console.log(params+" "+xmlDoc.responseText+" "+gotIn);
 
         if (xmlDoc.responseText=="IN")
             gotIn=true;
@@ -225,6 +225,7 @@ console.log(event.data);
                 component: COMPONENTNAME,
                 CSS: CSS,
                 iframesrc: hmlLaunchURL+"?type=15",
+                allow: 'microphone '+ltiurl+'; camera '+ltiurl,
                 width:dwidth-30,
                 height:dheight-90,
                 style:"border:0px;"
@@ -276,6 +277,10 @@ console.log(event.data);
 		},
 
 		baseurl: {
+			value: ''
+		},
+
+		ltiurl: {
 			value: ''
 		},
 
