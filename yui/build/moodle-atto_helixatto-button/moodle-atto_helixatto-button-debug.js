@@ -34,12 +34,10 @@ YUI.add('moodle-atto_helixatto-button', function (Y, NAME) {
  */
 
 var COMPONENTNAME = 'atto_helixatto';
-//var LOGNAME = 'atto_helixatto';
-
 
 var TEMPLATE = '' +
     '<form class=\"atto_form\">' +
-        '<div id="{{elementid}}_{{innerform}}" class="mdl-align" style=\"height:{{height}}px;\">'+
+        '<div id="{{elementid}}_{{innerform}}" class="mdl-align" style=\"height:{{height}}px;\">' +
             '<iframe id=\"medialiframe\" style=\"border:0px;margin:0px;background:#ffffff;width:100%;height:100%\" src=\"{{iframesrc}}\" allow=\"{{allow}}\"></iframe>' +
             '<button id=\"medial_insert\" class=\"{{CSS.INPUTSUBMIT}}\">{{get_string "insert" component}}</button>' +
         '</div>' +
@@ -47,9 +45,9 @@ var TEMPLATE = '' +
 
 
 var CSS = {
-        INPUTSUBMIT: 'atto_media_urlentrysubmit',
-        INPUTCANCEL: 'atto_media_urlentrycancel'
-    };
+    INPUTSUBMIT: 'atto_media_urlentrysubmit',
+    INPUTCANCEL: 'atto_media_urlentrycancel'
+};
 
 var preid = -1;
 var inserted = false;
@@ -68,8 +66,8 @@ var oauthConsumerKey = "";
 
 Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 
-  
-	/**
+
+    /**
      * Initialize the button
      *
      * @method Initializer
@@ -80,7 +78,7 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
             return;
         }
 
-        if (window.location.href.indexOf("action=grader")>-1) {
+        if (window.location.href.indexOf("action=grader") > -1) {
             return;
         }
 
@@ -92,84 +90,80 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
         });
 
         window.addEventListener("message", this._receiveMessage, false);
-        //window.onunload=this._doInsert;
-        hmlLaunchURL = this.get('baseurl')+"/mod/helixmedia/launch.php";
+        hmlLaunchURL = this.get('baseurl') + "/mod/helixmedia/launch.php";
         ltiurl = this.get('ltiurl');
-        //The interval timer doesn't seem to get the right scope for "this" to work inside _checkStatus, so set a global var here.
+        // The interval timer doesn't seem to get the right scope for "this" to work inside _checkStatus, so set a global var here.
         buttonInstance = this;
     },
 
     /**
-    * Listener for the helix selection complete event
-    **/
-
+     * Listener for the helix selection complete event.
+     **/
     _receiveMessage: function(event) {
-        var i=event.data.indexOf("preid_");
-        if (i==0) {
-            preid=event.data.substring(6);
+        var i = event.data.indexOf("preid_");
+        if (i == 0) {
+            preid = event.data.substring(6);
             interval = setTimeout(buttonInstance._checkStatus, 5000);
         }
     },
 
     /**
-    * Monitors the status of the video selection on the HML server
-    * Note, this doesn't use setInterval so that this check will quickly die if there is a problem
-    * rather than continuing for ever. The check is a convenience and isn't critical to the operation
-    * of the plugin.
-    **/
+     * Monitors the status of the video selection on the HML server
+     * Note, this doesn't use setInterval so that this check will quickly die if there is a problem
+     * rather than continuing for ever. The check is a convenience and isn't critical to the operation
+     * of the plugin.
+     **/
 
     _checkStatus: function() {
-        var xmlDoc=null;
+        var xmlDoc = null;
 
-        if (typeof window.ActiveXObject != 'undefined' )
+        if (typeof window.ActiveXObject != 'undefined' ) {
             xmlDoc = new ActiveXObject("Microsoft.XMLHTTP");
-        else
+        } else {
             xmlDoc = new XMLHttpRequest();
+        }
 
-        var params="resource_link_id="+preid+"&user_id="+buttonInstance.get('userid')+"&oauth_consumer_key="+buttonInstance.get('oauthConsumerKey');
+        var params = "resource_link_id=" + preid + "&user_id=" + buttonInstance.get('userid') +
+            "&oauth_consumer_key=" + buttonInstance.get('oauthConsumerKey');
         xmlDoc.open("POST", buttonInstance.get('statusurl') , false);
         xmlDoc.setRequestHeader("Content-type","application/x-www-form-urlencoded");
         xmlDoc.send(params);
 
-        if (dialogueInstance!=null && dialogueInstance.get("visible")==false) {
-            gotIn=false;
+        if (dialogueInstance != null && dialogueInstance.get("visible") == false) {
+            gotIn = false;
             return;
         }
 
-        if (xmlDoc.responseText=="IN")
-            gotIn=true;
+        if (xmlDoc.responseText == "IN") {
+            gotIn = true;
+        }
 
-        if (xmlDoc.responseText=="OUT" && gotIn==true) {
-            // If we use the delay here, then the dialog close fails (why???) so we're going to ignore it for now.
-            //var delay=parseInt(buttonInstance.get('insertdelay'));
-            //if (delay>0)
-            //    setTimeout(buttonInstance._doInsert, delay*1000);
-            //else
-                gotIn=false;
+        if (xmlDoc.responseText == "OUT" && gotIn == true) {
+                gotIn = false;
                 buttonInstance._doInsert();
         } else {
             interval = setTimeout(buttonInstance._checkStatus, 2000);
         }
-        
+
     },
 
      /**
-     * Display the helixatto Dialogue
-     *
-     * @method _displayDialogue
-     * @private
-     */
+      * Display the helixatto Dialogue
+      *
+      * @method _displayDialogue
+      * @private
+      */
     _displayDialogue: function(e) {
         e.preventDefault();
         inserted = false;
-        var width = document.documentElement.clientWidth-10;
-        var height = document.documentElement.clientHeight-55;
+        var width = document.documentElement.clientWidth - 10;
+        var height = document.documentElement.clientHeight - 55;
 
-        if (width>935) {
-            width=935;
+        if (width > 935) {
+            width = 935;
         }
-        if (height>1400) {
-            height=1400;
+        if (height > 1400) {
+            height = 1400;
         }
 
         dwidth = width;
@@ -183,27 +177,26 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
             constraintoviewport: false
         });
 
-		//dialog doesn't detect changes in width without this
-		//if you reuse the dialog, this seems necessary
+        // Dialog doesn't detect changes in width without this - if you reuse the dialog, this seems necessary.
         if(dialogueInstance.width !== width + 'px'){
-            dialogueInstance.set('width',width+'px');
+            dialogueInstance.set('width', width + 'px');
         }
 
-        //append buttons to iframe
+        // Append buttons to iframe.
         var buttonform = this._getFormContent();
 
-        var bodycontent =  Y.Node.create('<div></div>');
+        var bodycontent = Y.Node.create('<div></div>');
         bodycontent.append(buttonform);
 
-        //set to bodycontent
+        // Set to bodycontent.
         dialogueInstance.set('bodyContent', bodycontent);
 
         dialogueInstance.show();
 
-        if(buttonInstance.get('hideinsert')=="1") {
-            document.getElementById("medial_insert").style.visibility="hidden";
+        if(buttonInstance.get('hideinsert') == "1") {
+            document.getElementById("medial_insert").style.visibility = "hidden";
         } else {
-            document.getElementById("medialiframe").style.height=(height-115)+"px";
+            document.getElementById("medialiframe").style.height = (height - 115) + "px";
         }
 
         this.markUpdated();
@@ -211,23 +204,23 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
 
 
      /**
-     * Return the dialogue content for the tool, attaching any required
-     * events.
-     *
-     * @method _getDialogueContent
-     * @return {Node} The content to place in the dialogue.
-     * @private
-     */
+      * Return the dialogue content for the tool, attaching any required
+      * events.
+      *
+      * @method _getDialogueContent
+      * @return {Node} The content to place in the dialogue.
+      * @private
+      */
     _getFormContent: function() {
         var template = Y.Handlebars.compile(TEMPLATE),
             content = Y.Node.create(template({
                 elementid: this.get('host').get('elementid'),
                 component: COMPONENTNAME,
                 CSS: CSS,
-                iframesrc: hmlLaunchURL+"?type=15",
-                allow: 'microphone '+ltiurl+'; camera '+ltiurl,
-                width:dwidth-30,
-                height:dheight-90,
+                iframesrc: hmlLaunchURL + "?type=15&modtype=" + this.get('modtype'),
+                allow: 'microphone ' + ltiurl + '; camera ' + ltiurl,
+                width:dwidth - 30,
+                height:dheight - 90,
                 style:"border:0px;"
             }));
 
@@ -245,11 +238,13 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
 
     _doInsert : function(e){
 
-        if (typeof(e) != "undefined")
+        if (typeof(e) != "undefined") {
             e.preventDefault();
+        }
 
-        if (inserted)
+        if (inserted) {
             return;
+        }
 
         inserted = true;
         this.getDialogue({
@@ -258,52 +253,57 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
 
         this.editor.focus();
 
-        var url=hmlLaunchURL+"?type=10&l="+preid;
-        var html="<p><iframe style=\"overflow:hidden;border:0px none;background:#ffffff;width:680px;height:570px;\""+
-            " src=\""+url+"\" id=\"hmlvid-"+preid+"\" allowfullscreen=\"true\" webkitallowfullscreen=\"true\" mozallowfullscreen=\"true\"></iframe>\n"+
-            "</p>";
+        var url = hmlLaunchURL + "?type=16&l=" + preid;
+        var html = "";
+        if (this.get('linkonly')) {
+            var html = "<p><a href=\"" + url + "\" target=\"_blank\">" + M.util.get_string('showvideo', COMPONENTNAME) + "</a></p>";
+        } else {
+            var html = "<p><iframe style=\"overflow:hidden;border:0px none;background:#ffffff;width:680px;height:570px;\"" +
+                " src=\"" + url + "\" id=\"hmlvid-" + preid + "\" allowfullscreen=\"true\" webkitallowfullscreen=\"true\"" +
+                "mozallowfullscreen=\"true\"></iframe>\n</p>";
+        }
 
         this.get('host').insertContentAtFocusPoint(html);
         this.markUpdated();
 
     }
-}, { ATTRS: {
-		disabled: {
-			value: false
-		},
-
-		usercontextid: {
-			value: null
-		},
-
-		baseurl: {
-			value: ''
-		},
-
-		ltiurl: {
-			value: ''
-		},
-
-		statusurl: {
-			value: ''
-		},
-
-		userid: {
-			value: ''
-		},
-
-		hideinsert: {
-			value: ''
-		},
-
-		insertdelay: {
-			value: ''
-		},
-
-		oauthConsumerKey: {
-			value: ''
-		},
-	}
+},
+{
+    ATTRS: {
+        disabled: {
+            value: false
+        },
+        linkonly: {
+            value: false
+        },
+        usercontextid: {
+            value: null
+        },
+        baseurl: {
+            value: ''
+        },
+        ltiurl: {
+            value: ''
+        },
+        statusurl: {
+            value: ''
+        },
+        userid: {
+            value: ''
+        },
+        hideinsert: {
+            value: ''
+        },
+        insertdelay: {
+            value: ''
+        },
+        oauthConsumerKey: {
+            value: ''
+        },
+        modtype: {
+            value: ''
+        }
+    }
 });
 
 

@@ -24,7 +24,7 @@
  */
 
 defined('MOODLE_INTERNAL') || die();
-require_once ($CFG->dirroot.'/mod/helixmedia/locallib.php');
+require_once($CFG->dirroot.'/mod/helixmedia/locallib.php');
 
 /**
  * Initialise this plugin
@@ -35,59 +35,84 @@ function atto_helixatto_strings_for_js() {
 
     $PAGE->requires->strings_for_js(array('insert',
                                           'cancel',
-                                          'dialogtitle'),
+                                          'dialogtitle',
+                                          'showvideo'),
                                     'atto_helixatto');
 }
+
+/**
+ * Parses a list of module types and checks if they match the one we are in.
+ */
+function atto_helixatto_checklist($param) {
+    global $PAGE, $DB;
+    $config = get_config('atto_helixatto', $param);
+    $types = explode("\n", $config);
+
+    for ($i = 0; $i < count($types); $i++) {
+        $types[$i] = trim($types[$i]);
+        if (strlen($types[$i]) > 0 && strpos($PAGE->url, '/'.$types[$i].'/') !== false &&
+            $DB->get_record('modules', array('name' => $types[$i]))) {
+            return $types[$i];
+        }
+    }
+    return false;
+}
+
 
 /**
  * Return the js params required for this module.
  * @return array of additional params to pass to javascript init function for this module.
  */
 function atto_helixatto_params_for_js($elementid, $options, $fpoptions) {
-    global $USER, $COURSE, $CFG, $PAGE;
+    global $USER, $COURSE, $CFG;
 
     /**Switch of button when using the activity module.
        Use PARAM_RAW type here in case "add" is used for something other than a plugin name in other parts of moodle**/
     $add = optional_param("add", "none", PARAM_RAW);
     $action = optional_param("action", "none", PARAM_RAW);
 
-    //coursecontext
-    $coursecontext=context_course::instance($COURSE->id);	
+    $coursecontext = context_course::instance($COURSE->id);
+    $usercontextid = context_user::instance($USER->id)->id;
 
-    //usercontextid
-    $usercontextid=context_user::instance($USER->id)->id;
-    $disabled=false;
-
-    //config our array of data
     $params = array();
     $params['usercontextid'] = $usercontextid;
+    $params['disabled'] = true;
+    $params['linkonly'] = false;
+    $params['modtype'] = "";
 
-    //If they don't have permission don't show it
-    if(!has_capability('atto/helixatto:visible', $coursecontext) ){
-        $disabled=true;
+    if (atto_helixatto_checklist('uselinkdesc')) {
+        $params['linkonly'] = true;
     }
 
-    if (strpos($PAGE->url, '/forum/post.php')!== false && $CFG->enabletrusttext == 0) {
-        $disabled = true;
+    $mtype = atto_helixatto_checklist('modtypeperm');
+
+    if ($mtype) {
+        if (has_capability('atto/helixatto:visiblemodtype', $coursecontext)) {
+            $params['disabled'] = false;
+            $params['modtype'] = $mtype;
+            $params['linkonly'] = true;
+        }
+    } else {
+        if (has_capability('atto/helixatto:visible', $coursecontext)) {
+            $params['disabled'] = false;
+        }
     }
 
     if ($add == "helixmedia" || $action == "grader" || $action == "grade") {
-        $disabled = true;
+        $params['disabled'] = true;
     }
 
-    //add our disabled param
-    $params['disabled'] = $disabled;
     $params['baseurl'] = $CFG->wwwroot;
     $params['ltiurl'] = get_config("helixmedia", "launchurl");
     $params['statusurl'] = helixmedia_get_status_url();
     $params['userid'] = $USER->id;
     $params['insertdelay'] = get_config('helixmedia', 'modal_delay');
     $params['oauthConsumerKey'] = get_config('helixmedia', 'consumer_key');
-    if ($params['insertdelay'] > -1)
+    if ($params['insertdelay'] > -1) {
         $params['hideinsert'] = get_config('atto_helixatto', 'hideinsert');
-    else
+    } else {
         $params['hideinsert'] = "0";
-
+    }
     return $params;
 }
 

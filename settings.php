@@ -32,7 +32,7 @@ if ($ADMIN->fulltree) {
     $name = new lang_string('hideinsert', 'atto_helixatto');
     $desc = new lang_string('hideinsert_desc', 'atto_helixatto');
     $default = 1;
-    $options = $always_stream=array(0=>new lang_string("no"), 1=>new lang_string("yes"));
+    $options = array(0 => new lang_string("no"), 1 => new lang_string("yes"));
 
     $setting = new admin_setting_configselect('atto_helixatto/hideinsert',
                                               $name,
@@ -40,4 +40,10 @@ if ($ADMIN->fulltree) {
                                               $default,
                                               $options);
     $settings->add($setting);
+
+    $settings->add(new admin_setting_configtextarea('atto_helixatto/modtypeperm', get_string("modtypetitle", "atto_helixatto"),
+                   get_string("modtypedesc", "atto_helixatto"), "", PARAM_TEXT));
+
+    $settings->add(new admin_setting_configtextarea('atto_helixatto/uselinkdesc', get_string("uselinktitle", "atto_helixatto"),
+                   get_string("uselinkdesc", "atto_helixatto"), "forum\r\nworkshop", PARAM_TEXT));
 }
