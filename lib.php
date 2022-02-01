@@ -33,11 +33,8 @@ require_once($CFG->dirroot.'/mod/helixmedia/locallib.php');
 function atto_helixatto_strings_for_js() {
     global $PAGE;
 
-    $PAGE->requires->strings_for_js(array('insert',
-                                          'cancel',
-                                          'dialogtitle',
-                                          'showvideo'),
-                                    'atto_helixatto');
+    $PAGE->requires->strings_for_js(array('insert', 'cancel', 'dialogtitle', 'showvideo', 'iframe', 'thumbnail', 'link', 'newtab', 'inserttype'),
+        'atto_helixatto');
 }
 
 /**
@@ -47,17 +44,27 @@ function atto_helixatto_checklist($param) {
     global $PAGE, $DB;
     $config = get_config('atto_helixatto', $param);
     $types = explode("\n", $config);
-
     for ($i = 0; $i < count($types); $i++) {
         $types[$i] = trim($types[$i]);
-        if (strlen($types[$i]) > 0 && strpos($PAGE->url, '/'.$types[$i].'/') !== false &&
+        if (strlen($types[$i]) > 0 && strpos($PAGE->pagetype, 'mod-'.$types[$i]) !== false &&
             $DB->get_record('modules', array('name' => $types[$i]))) {
             return $types[$i];
         }
     }
+
     return false;
 }
 
+function atto_helixatto_has_filter() {
+    global $DB;
+    // Do we have the filter installed and active?
+    $rec = $DB->get_record('filter_active', array('filter' => 'medial', 'active' => 1));
+    if ($rec) {
+        return true;
+    }
+
+    return false;
+}
 
 /**
  * Return the js params required for this module.
@@ -71,17 +78,28 @@ function atto_helixatto_params_for_js($elementid, $options, $fpoptions) {
     $add = optional_param("add", "none", PARAM_RAW);
     $action = optional_param("action", "none", PARAM_RAW);
 
+    $hasfilter = atto_helixatto_has_filter();
+
     $coursecontext = context_course::instance($COURSE->id);
     $usercontextid = context_user::instance($USER->id)->id;
 
     $params = array();
     $params['usercontextid'] = $usercontextid;
     $params['disabled'] = true;
-    $params['linkonly'] = false;
     $params['modtype'] = "";
+    if (!$hasfilter) {
+        $params['placeholder'] = 0;
+    } else {
+        $params['placeholder'] = get_config('atto_helixatto', 'placeholder');
+    }
+    $params['linkonly'] = false;
 
-    if (atto_helixatto_checklist('uselinkdesc')) {
+    if ($params['placeholder'] == 1) {
         $params['linkonly'] = true;
+    } else {
+        if (atto_helixatto_checklist('uselinkdesc')) {
+            $params['linkonly'] = true;
+        }
     }
 
     $mtype = atto_helixatto_checklist('modtypeperm');
@@ -111,7 +129,18 @@ function atto_helixatto_params_for_js($elementid, $options, $fpoptions) {
     if ($params['insertdelay'] > -1) {
         $params['hideinsert'] = get_config('atto_helixatto', 'hideinsert');
     } else {
-        $params['hideinsert'] = "0";
+        $params['hideinsert'] = 0;
+    }
+    $params['playersizeurl'] = helixmedia_get_playerwidthurl();
+    $params['course'] = $COURSE->id;
+    if ($hasfilter == 1) {
+        if (get_config('atto_helixatto', 'embedopt') == 1) {
+            $params['hasfilter'] = true;
+        } else {
+            $params['hasfilter'] = false;
+        }
+    } else {
+        $params['hasfilter'] = false;
     }
     return $params;
 }

@@ -38,20 +38,24 @@ var COMPONENTNAME = 'atto_helixatto';
 var TEMPLATE = '' +
     '<form class=\"atto_form\">' +
         '<div id="{{elementid}}_{{innerform}}" class="mdl-align" style=\"height:{{height}}px;\">' +
-            '<iframe id=\"medialiframe\" style=\"border:0px;margin:0px;background:#ffffff;width:100%;height:100%\" src=\"{{iframesrc}}\" allow=\"{{allow}}\"></iframe>' +
-            '<button id=\"medial_insert\" class=\"{{CSS.INPUTSUBMIT}}\">{{get_string "insert" component}}</button>' +
+            '<iframe id=\"medialiframe\" style=\"border:0px;margin:0px;background:#ffffff;width:100%;height:{{iheight}};\" ' +
+            'src=\"{{iframesrc}}\" allow=\"{{allow}}\"></iframe>' +
+            '<div class=\"{{hasfilter}}\">{{get_string "inserttype" component}} '+
+            '<select id=\"medial_insert_type\" name=\"medial_insert_type\" class=\"custom-select\">' +
+            '<option value=\"iframe\">{{get_string "iframe" component}}</option>' +
+            '<option value=\"thumbnail\">{{get_string "thumbnail" component}}</option>' +
+            '<option value=\"link\">{{get_string "link" component}}</option>' +
+            '</select></div>' +
+            '<button id=\"medial_insert\" class=\"btn btn-secondary submit {{hidden}}\"> ' +
+            '{{get_string "insert" component}}</button>' +
         '</div>' +
     '</form>';
 
 
-var CSS = {
-    INPUTSUBMIT: 'atto_media_urlentrysubmit',
-    INPUTCANCEL: 'atto_media_urlentrycancel'
-};
-
 var preid = -1;
 var inserted = false;
 var hmlLaunchURL = '';
+var embedLaunchURL = '';
 var ltiurl = '';
 var interval = null;
 var buttonInstance = '';
@@ -61,8 +65,6 @@ var dwidth = 935;
 var dheight = 435;
 
 var gotIn = false;
-
-var oauthConsumerKey = "";
 
 Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto.EditorPlugin, [], {
 
@@ -89,8 +91,16 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
             callback: this._displayDialogue
         });
 
+        
         window.addEventListener("message", this._receiveMessage, false);
+        
         hmlLaunchURL = this.get('baseurl') + "/mod/helixmedia/launch.php";
+        if (this.get('placeholder') == 1) {
+            embedLaunchURL = "{{{medial_launch_base}}}/mod/helixmedia/launch.php";
+        } else {
+            embedLaunchURL = hmlLaunchURL;
+        }
+        
         ltiurl = this.get('ltiurl');
         // The interval timer doesn't seem to get the right scope for "this" to work inside _checkStatus, so set a global var here.
         buttonInstance = this;
@@ -115,13 +125,7 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
      **/
 
     _checkStatus: function() {
-        var xmlDoc = null;
-
-        if (typeof window.ActiveXObject != 'undefined' ) {
-            xmlDoc = new ActiveXObject("Microsoft.XMLHTTP");
-        } else {
-            xmlDoc = new XMLHttpRequest();
-        }
+        var xmlDoc = new XMLHttpRequest();
 
         var params = "resource_link_id=" + preid + "&user_id=" + buttonInstance.get('userid') +
             "&oauth_consumer_key=" + buttonInstance.get('oauthConsumerKey');
@@ -168,6 +172,7 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
 
         dwidth = width;
         dheight = height;
+        
         dialogueInstance = this.getDialogue({
             headerContent: M.util.get_string('dialogtitle', COMPONENTNAME),
             width: width + 'px',
@@ -182,8 +187,23 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
             dialogueInstance.set('width', width + 'px');
         }
 
-        // Append buttons to iframe.
-        var buttonform = this._getFormContent();
+        // Append launch code
+        var hidden = '';
+        var iheight = '100%';
+        if(buttonInstance.get('hideinsert') == "1") {
+            hidden = "hidden";
+        }
+
+        var hasfilter = 'hidden';
+        if (buttonInstance.get('hasfilter')) {
+            hasfilter = '';
+        }
+
+        if (buttonInstance.get('hideinsert') == "1" || buttonInstance.get('hasfilter')) {
+            iheight = (height - 135) + "px";
+        }
+
+        var buttonform = this._getFormContent(hidden, iheight, hasfilter);
 
         var bodycontent = Y.Node.create('<div></div>');
         bodycontent.append(buttonform);
@@ -193,13 +213,6 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
 
         dialogueInstance.show();
 
-        if(buttonInstance.get('hideinsert') == "1") {
-            document.getElementById("medial_insert").style.visibility = "hidden";
-        } else {
-            document.getElementById("medialiframe").style.height = (height - 115) + "px";
-        }
-
-        this.markUpdated();
     },
 
 
@@ -211,21 +224,24 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
       * @return {Node} The content to place in the dialogue.
       * @private
       */
-    _getFormContent: function() {
+    _getFormContent: function(hidden, iheight, hasfilter) {
+
         var template = Y.Handlebars.compile(TEMPLATE),
             content = Y.Node.create(template({
                 elementid: this.get('host').get('elementid'),
                 component: COMPONENTNAME,
-                CSS: CSS,
                 iframesrc: hmlLaunchURL + "?type=15&modtype=" + this.get('modtype'),
                 allow: 'microphone ' + ltiurl + '; camera ' + ltiurl,
                 width:dwidth - 30,
                 height:dheight - 90,
-                style:"border:0px;"
+                style:"border:0px;",
+                hidden: hidden,
+                iheight: iheight,
+                hasfilter: hasfilter
             }));
 
         this._form = content;
-        this._form.one('.' + CSS.INPUTSUBMIT).on('click', this._doInsert, this);
+        this._form.one('#medial_insert').on('click', this._doInsert, this);
 
         return content;
     },
@@ -237,7 +253,6 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
      */
 
     _doInsert : function(e){
-
         if (typeof(e) != "undefined") {
             e.preventDefault();
         }
@@ -246,26 +261,62 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
             return;
         }
 
-        inserted = true;
-        this.getDialogue({
-            focusAfterHide: null
-        }).hide();
+        var obj = this;
 
-        this.editor.focus();
+        var xmlDoc = new XMLHttpRequest();
+        var params = "resource_link_id=" + preid + "&user_id=" + buttonInstance.get('userid') +
+            "&oauth_consumer_key=" + buttonInstance.get('oauthConsumerKey') + 
+            "&context_id="+ buttonInstance.get('course') + 
+            "&include_height=Y";
 
-        var url = hmlLaunchURL + "?type=16&l=" + preid;
-        var html = "";
-        if (this.get('linkonly')) {
-            var html = "<p><a href=\"" + url + "\" target=\"_blank\">" + M.util.get_string('showvideo', COMPONENTNAME) + "</a></p>";
-        } else {
-            var html = "<p><iframe style=\"overflow:hidden;border:0px none;background:#ffffff;width:680px;height:570px;\"" +
-                " src=\"" + url + "\" id=\"hmlvid-" + preid + "\" allowfullscreen=\"true\" webkitallowfullscreen=\"true\"" +
-                "mozallowfullscreen=\"true\"></iframe>\n</p>";
-        }
+        xmlDoc.onload = function(response) {
+            if (xmlDoc.status >= 200 && xmlDoc.status < 400) {
+                var resp = xmlDoc.responseText.split(':');
+                console.log("playersize data");
+                console.log(resp);
+                var audioonly = 0;
+                if (resp.length == 3 && resp[2] == 'Y') {
+                    audioonly = 1;
+                }
+                console.log("audioonly="+audioonly);
 
-        this.get('host').insertContentAtFocusPoint(html);
-        this.markUpdated();
+                var inserttype = 'iframe';
+                var it = document.getElementById('medial_insert_type');
+                if (it) {
+                    inserttype = it.value;
+                }
 
+                inserted = true;
+                obj.editor.focus();
+
+                var url = embedLaunchURL + "?type=16&responsive=1&medialembed="+inserttype+"&audioonly="+audioonly+"&l=" + preid;
+                var html = "";
+                if (obj.get('linkonly') || inserttype != 'iframe') {
+                    html = "<a href='" + url + "' target='_blank'>" + M.util.get_string('showvideo', COMPONENTNAME) + "</a>";
+                } else {
+                    if (audioonly == 1) {
+                        html = "<div class='embed-responsive' style='height:100px' id='mediallaunch-" + preid+ "'>";
+                    } else {
+                        html = "<div class='embed-responsive embed-responsive-16by9' id='mediallaunch-" + preid+ "'>";
+                    }
+
+                    html += "<iframe class='embed-responsive-item overflow-auto border-0' " +
+                        "src='" + url + "' allowfullscreen='true' webkitallowfullscreen='true' " +
+                        "mozallowfullscreen='true'></iframe></div>";
+                }
+
+                dialogueInstance.hide();
+                console.log(html);
+                console.log(obj.get('host'));
+
+                obj.get('host').insertContentAtFocusPoint(html);
+                obj.markUpdated();
+            }
+        };
+        console.log(buttonInstance.get('playersizeurl'));
+        xmlDoc.open("POST", buttonInstance.get('playersizeurl') , true);
+        xmlDoc.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+        xmlDoc.send(params);
     }
 },
 {
@@ -302,6 +353,18 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
         },
         modtype: {
             value: ''
+        },
+        placeholder: {
+            value: false   
+        },
+        playersizeurl: {
+            value: ''
+        },
+        course: {
+            value: 0
+        },
+        hasfilter: {
+            value: false
         }
     }
 });
