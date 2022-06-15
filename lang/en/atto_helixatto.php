@@ -50,3 +50,4 @@ $string['newtab'] = 'Link + New Tab';
 $string['inserttype'] = 'Insert as';
 $string['embedopt'] = 'Enable experimental embedding options';
 $string['embedopt_desc'] = 'Enable a choice of embed styles for videos (embedded iframe, popup with thumbnail, popup link). Requires the filter plugin to be installed. Experimental feature, not fully tested yet.';
+$string['privacy:metadata'] = 'plugin does not store any personal data.';
