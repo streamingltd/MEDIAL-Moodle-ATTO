@@ -25,6 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot.'/mod/helixmedia/locallib.php');
+require_once($CFG->dirroot.'/lib/filterlib.php');
 
 /**
  * Initialise this plugin
@@ -55,16 +56,26 @@ function atto_helixatto_checklist($param) {
     return false;
 }
 
-function atto_helixatto_has_filter() {
+function atto_helixatto_has_filter($context = false) {
+    if ($context !== false) {
+        $filters = filter_get_active_in_context($context);
+        if (array_key_exists('medial', $filters)) {
+            return true;
+        }
+    
+        return false;
+    }
+
     global $DB;
-    // Do we have the filter installed and active?
-    $rec = $DB->get_record('filter_active', array('filter' => 'medial', 'active' => 1));
-    if ($rec) {
+    // If there is no context then we just need to know that the filter is active somewhere in Moodle
+    $rec = $DB->get_records('filter_active', array('filter' => 'medial', 'active' => 1));
+    if ($rec && count($rec) > 0) {
         return true;
     }
 
     return false;
 }
+
 
 /**
  * Return the js params required for this module.
@@ -78,10 +89,9 @@ function atto_helixatto_params_for_js($elementid, $options, $fpoptions) {
     $add = optional_param("add", "none", PARAM_RAW);
     $action = optional_param("action", "none", PARAM_RAW);
 
-    $hasfilter = atto_helixatto_has_filter();
-
     $coursecontext = context_course::instance($COURSE->id);
     $usercontextid = context_user::instance($USER->id)->id;
+    $hasfilter = atto_helixatto_has_filter($coursecontext);
 
     $params = array();
     $params['usercontextid'] = $usercontextid;
