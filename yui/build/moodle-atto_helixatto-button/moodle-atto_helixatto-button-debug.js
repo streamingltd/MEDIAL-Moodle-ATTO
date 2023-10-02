@@ -231,7 +231,7 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
                 elementid: this.get('host').get('elementid'),
                 component: COMPONENTNAME,
                 iframesrc: hmlLaunchURL + "?type=15&modtype=" + this.get('modtype'),
-                allow: 'microphone ' + ltiurl + '; camera ' + ltiurl,
+                allow: 'microphone ' + ltiurl + '; camera ' + ltiurl + '; display-capture '+ ltiurl + ';',
                 width:dwidth - 30,
                 height:dheight - 90,
                 style:"border:0px;",
@@ -295,9 +295,9 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
                     html = "<a href='" + url + "' target='_blank'>" + M.util.get_string('showvideo', COMPONENTNAME) + "</a>";
                 } else {
                     if (audioonly == 1) {
-                        html = "<div class='embed-responsive' style='height:100px' id='mediallaunch-" + preid+ "'>";
+                        html = "<div class='embed-responsive helixmedia_embedheight' style='height:100px' id='mediallaunch-" + preid+ "'>";
                     } else {
-                        html = "<div class='embed-responsive embed-responsive-16by9' id='mediallaunch-" + preid+ "'>";
+                        html = "<div class='embed-responsive embed-responsive-16by9 helixmedia_embedheight' id='mediallaunch-" + preid+ "'>";
                     }
 
                     html += "<iframe class='embed-responsive-item overflow-auto border-0' " +
