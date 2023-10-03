@@ -24,13 +24,14 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2023100201;        // The current plugin version (Date: YYYYMMDDXX).
+$plugin->version   = 2023100302;        // The current plugin version (Date: YYYYMMDDXX).
 $plugin->requires  = 2020061500;        // Requires this Moodle version.
 $plugin->component = 'atto_helixatto';  // Full name of the plugin (used for diagnostics).
 $plugin->maturity  = MATURITY_STABLE;
 // Human readable version information.
-$plugin->release   = 2023100201;
+$plugin->release   = '8.5.004';
 
 $plugin->dependencies = array(
-    'mod_helixmedia' => '2023100201'
+    'mod_helixmedia' => '2023100302'
 );
+$plugin->supported = [39, 402];
