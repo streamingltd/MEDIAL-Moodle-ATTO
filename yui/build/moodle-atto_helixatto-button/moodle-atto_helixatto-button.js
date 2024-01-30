@@ -159,6 +159,10 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
       */
     _displayDialogue: function(e) {
         e.preventDefault();
+
+        // The interval timer doesn't seem to get the right scope for "this" to work inside _checkStatus, so set a global var here.
+        buttonInstance = this;
+
         inserted = false;
         var width = document.documentElement.clientWidth - 10;
         var height = document.documentElement.clientHeight - 55;
@@ -305,12 +309,14 @@ Y.namespace('M.atto_helixatto').Button = Y.Base.create('button', Y.M.editor_atto
                         "mozallowfullscreen='true'></iframe></div>";
                 }
 
-                dialogueInstance.hide();
+
                 console.log(html);
                 console.log(obj.get('host'));
 
                 obj.get('host').insertContentAtFocusPoint(html);
                 obj.markUpdated();
+                console.log("hide dialog");
+                dialogueInstance.hide();
             }
         };
         console.log(buttonInstance.get('playersizeurl'));
